@@ -36,25 +36,30 @@ pairwise <- compare_means(Viability ~ Treatment,
         .default = Day
     ))
 
-### Boxplot ---
-ggplot(data = counts[which(counts$Day != 0),], aes(x = factor(Day), y = Viability)) +
-    geom_boxplot(aes(color = Treatment)) +
-    geom_jitter(aes(color = Treatment, group = Treatment, shape = Line), position = position_dodge(width = 0.75)) +
-    stat_pvalue_manual(pairwise, label = "{p.signif}", y.position = 1.06,
-                       x = "Day", size = 3.88,
-                       hide.ns = T,
-                       position = ggpp::position_dodgenudge(width = 0, x = 0)) +
-    geom_bracket(xmin = .7, xmax = 1.3, y.position = 1.05, label = "") +
-    geom_bracket(xmin = 2.7, xmax = 3.3, y.position = 1.05, label = "") +
-    xlab("Day") +
-    theme_classic2() +
-    scale_color_manual(values = brewer.pal(n = 4, name = "Set2"))
-
 ### Welch test for group differences ---
+gh_sum <- data.frame()
 for (i in unique(counts$Day[which(counts$Day != 0)])) {
     print(paste("Day", i))
     day_welch <- oneway.test(Viability ~ Treatment, data = counts[which(counts$Day == i),])
     print(day_welch)
     games_howell <- rstatix::games_howell_test(Viability ~ Treatment, data = counts[which(counts$Day == i),])
+    games_howell$Day <- rep(i, 6)
+    gh_sum <- rbind(gh_sum, games_howell)
     print(games_howell)
 }
+gh_sum <- gh_sum %>%
+    mutate(Day = case_when(
+        Day != 1 ~ Day - 1,
+        .default = Day
+    ))
+
+### Boxplot ---
+ggplot(data = counts[which(counts$Day != 0),], aes(x = factor(Day), y = Viability)) +
+    geom_boxplot(aes(color = Treatment), size = 0.7) +
+    geom_jitter(aes(color = Treatment, group = Treatment, shape = Line),
+                position = position_dodge(width = 0.75), size = 2, alpha = 0.7) +
+    xlab("Day") +
+    theme_classic2() +
+    scale_color_manual(values = brewer.pal(n = 4, name = "Set2"))
+ggsave("ViabilityBoxplot.pdf", dpi = 600)
+
