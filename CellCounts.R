@@ -11,18 +11,18 @@ counts$Treatment <- counts$Treatment %>%
 
 ### Initial plotting ---
 # Treatment effect on viability 
-ggplot(data = counts, aes(x = Day, y = 1 - Viability, color = Treatment)) +
+ggplot(data = counts[which(counts$Day != 0),], aes(x = Day, y = Viability, color = Treatment)) +
     geom_point(aes(shape = Line)) +
-    geom_smooth(formula = y ~ x + 0, method = "lm", se = F) +
-    ylab("% Dead") +
+    geom_smooth(formula = y ~ x, method = "lm", se = T) +
+    #ylab("% Dead") +
     theme_minimal() +
     scale_color_manual(values = brewer.pal(n = 4, name = "Set2"))
 
 # Cell line effect on viability
-ggplot(data = counts, aes(x = Day, y = 1 - Viability, color = Line)) +
+ggplot(data = counts[which(counts$Day != 0),], aes(x = Day, y = Viability, color = Line)) +
     geom_point(aes(shape = Treatment)) +
-    geom_smooth(formula = y ~ x + 0, method = "lm", se = F) +
-    ylab("% Dead") +
+    geom_smooth(formula = y ~ x, method = "lm", se = T) +
+    #ylab("% Dead") +
     theme_minimal() +
     scale_color_manual(values = brewer.pal(n = 3, name = "Set2"))
 
@@ -60,6 +60,10 @@ ggplot(data = counts[which(counts$Day != 0),], aes(x = factor(Day), y = Viabilit
                 position = position_dodge(width = 0.75), size = 2, alpha = 0.7) +
     xlab("Day") +
     theme_classic2() +
-    scale_color_manual(values = brewer.pal(n = 4, name = "Set2"))
+    scale_color_manual(values = brewer.pal(n = 4, name = "Set2"))  +
+    stat_pvalue_manual(gh_sum, label = "{p.adj.signif}", y.position = 1.06,
+                       x = "Day", size = 3.88,
+                       hide.ns = T,
+                       position = position_dodge2(reverse = F, width = 0.5, preserve = "single"))
 ggsave("ViabilityBoxplot.pdf", dpi = 600)
 
